@@ -1,5 +1,5 @@
 from fastapi import FastAPI, Path, HTTPException
-from dataclasses import dataclass
+from dataclasses import dataclass, asdict
 from typing import Union
 import json
 
@@ -41,3 +41,27 @@ def get_pokemon_by_id(id: int = Path(ge=1)) -> Pokemon :
     if id not in list_pokemons:
         raise HTTPException(status_code=404, detail="Pokemon not found")
     return Pokemon(**list_pokemons[id])
+
+@app.post("/pokemon")
+def create_pokemon(pokemon: Pokemon) -> Pokemon :
+    if pokemon.id in list_pokemons:
+        raise HTTPException(status_code=404, detail="Pokemon already exists")
+
+    list_pokemons[pokemon.id] = asdict(pokemon)
+    return pokemon
+
+@app.put("/pokemon/{id}")
+def update_pokemon(pokemon: Pokemon, id: int = Path(ge=1)) -> Pokemon :
+    if id not in list_pokemons:
+        raise HTTPException(status_code=404, detail="Pokemon not found")
+    if pokemon.id != id:
+        raise HTTPException(status_code=404, detail="Pokemon id must be the same")
+    list_pokemons[id] = asdict(pokemon)
+    return pokemon
+
+@app.delete("/pokemon/{id}")
+def delete_pokemon(id: int = Path(ge=1)) -> None :
+    if id not in list_pokemons:
+        raise HTTPException(status_code=404, detail="Pokemon not found")
+    del list_pokemons[id]
+    return {"deleted": "The pokemon has been deleted"}
